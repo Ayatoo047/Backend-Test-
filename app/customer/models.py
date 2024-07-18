@@ -3,6 +3,12 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 class CustomerDetail(models.Model):
+    ROLE = [
+        ('customer', 'customer'),
+        ('admin', 'admin'),
+        ('agent', 'agent'),
+    ]
+    
     user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
     phone = models.CharField(max_length=11)
     state = models.CharField(max_length=500)

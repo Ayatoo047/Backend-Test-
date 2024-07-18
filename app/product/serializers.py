@@ -29,9 +29,9 @@ class ProductSerializerOut(serializers.ModelSerializer):
             'id',
             'category',
             'name',
-            'amount',
+            'price',
             'description',
-            'number_in_stock',
+            'in_stock',
             'colors',
         ]
     

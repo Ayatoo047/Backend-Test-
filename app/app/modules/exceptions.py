@@ -1,7 +1,7 @@
 import datetime
 import secrets
 from rest_framework.exceptions import APIException
-from modules.utils import log_request
+from .utils import log_request
 
 
 class InvalidRequestException(APIException):

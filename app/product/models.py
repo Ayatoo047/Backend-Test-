@@ -1,3 +1,4 @@
+from typing import Iterable
 from django.db import models
 import uuid
 from django.contrib.auth.models import User
@@ -7,12 +8,20 @@ class Color(models.Model):
     
     def __str__(self) -> str:
         return str(self.color)
+    
+    def save(self, force_insert: bool = ..., force_update: bool = ..., using: str | None = ..., update_fields: Iterable[str] | None = ...) -> None:
+        self.color = self.color.lower()
+        return super().save()
 
 class Category(models.Model):
     name = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
         return str(self.name)
+    
+    def save(self, force_insert: bool = ..., force_update: bool = ..., using: str | None = ..., update_fields: Iterable[str] | None = ...) -> None:
+        self.name = self.name.lower()
+        return super().save()
 
 class Product(models.Model):
     name = models.CharField(max_length=200)
@@ -23,6 +32,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.SET_NULL)
     price = models.IntegerField()
     colors = models.ManyToManyField(Color, blank=True)
+    amount_sold = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return str(self.name)
@@ -34,7 +44,6 @@ class Cart(models.Model):
 
     def __str__(self):
         return str(self.owner)
-
 
 class Cartitem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='items')
