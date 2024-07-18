@@ -38,3 +38,15 @@ class Cartitem(models.Model):
     def __str__(self):
         return str(self.product)
         
+
+class Order(models.Model):
+    owner = models.OneToOneField(User, blank=True, null=True, on_delete=models.CASCADE) 
+    is_verified = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+    
+
+class OrderItems(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
+    orderitems = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    quantity = models.PositiveSmallIntegerField()
+    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
