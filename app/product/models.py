@@ -2,6 +2,11 @@ from django.db import models
 import uuid
 from django.contrib.auth.models import User
 
+class Color(models.Model):
+    color = models.CharField(max_length=20)
+    
+    def __str__(self) -> str:
+        return str(self.color)
 
 class Category(models.Model):
     name = models.CharField(max_length=200, blank=True, null=True)
@@ -17,6 +22,7 @@ class Product(models.Model):
     in_stock = models.IntegerField(default=0)
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.SET_NULL)
     price = models.IntegerField()
+    colors = models.ManyToManyField(Color, blank=True)
 
     def __str__(self):
         return str(self.name)
