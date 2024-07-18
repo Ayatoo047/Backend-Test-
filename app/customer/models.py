@@ -3,7 +3,13 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 class CustomerDetail(models.Model):
+    ROLES = [
+        ('customer', 'customer'),
+        ('admin', 'admin')
+    ]
+    
     user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLES)
     phone = models.CharField(max_length=11)
     state = models.CharField(max_length=500)
     address = models.CharField(max_length=500)
