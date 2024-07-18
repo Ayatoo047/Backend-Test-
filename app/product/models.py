@@ -21,4 +21,20 @@ class Product(models.Model):
     def __str__(self):
         return str(self.name)
 
+
+class Cart(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+    owner = models.OneToOneField(User, blank=True, null=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.owner)
+
+
+class Cartitem(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='items')
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cartitems')
+    quantity = models.IntegerField(default=1)
+
+    def __str__(self):
+        return str(self.product)
         
