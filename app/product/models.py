@@ -55,13 +55,45 @@ class Cartitem(models.Model):
         
 
 class Order(models.Model):
-    owner = models.OneToOneField(User, blank=True, null=True, on_delete=models.CASCADE) 
+    owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE) 
     is_verified = models.BooleanField(default=False)
+    order_id = models.CharField(max_length=13)
     created = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self) -> str:
+        return f'{self.order_id}'
+    
+    @property
+    def grandtotal(self):
+        orderitems = self.orderitems.all()
+        grandtotal = sum([item.price for item in orderitems])
+        return grandtotal
+
+    @property
+    def numberofitem(self):
+        numberofitem = self.orderitems.count()
+        return numberofitem
+
+    def save(self, force_insert: bool = ..., force_update: bool = ..., using: str | None = ..., update_fields: Iterable[str] | None = ...) -> None:
+        if not self.order_id:
+            self.order_id = str(uuid.uuid4().hex[:12].upper())
+        return super().save()
+    
+    def verified(self):
+        self.is_verified = True
+        self.save()
+
     
 
 class OrderItems(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
     orderitems = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
     quantity = models.PositiveSmallIntegerField()
-    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
+    
+    @property
+    def price(self):
+        final_price = self.quantity * self.orderitems.price
+        return final_price
+    
+    def __str__(self) -> str:
+        return f'{self.order.order_id} - {self.order.numberofitem}'

@@ -9,8 +9,11 @@ from app.modules.exceptions import raise_serializer_error_msg
 from app.modules.utils import api_response, get_incoming_request_checks, incoming_request_checks
 from app.modules.permissions import IsAgentAdmin, IsAdmin
 from rest_framework.permissions import IsAuthenticated
-from .serializers import ProductSerializerIn, ProductSerializerOut
-from .models import Order, OrderItems, Product, Color 
+from .serializers import CartItemSerializer, CartSerializer, OrderItemSerializer, OrderSerializer, ProductSerializerIn, ProductSerializerOut
+from .models import Cart, Cartitem, Order, OrderItems, Product, Color 
+from rest_framework.viewsets import ModelViewSet, GenericViewSet, ReadOnlyModelViewSet
+from rest_framework.mixins import RetrieveModelMixin, CreateModelMixin, ListModelMixin
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from django.shortcuts import get_object_or_404
 
 # Create your views here.
@@ -124,3 +127,63 @@ class ProductAPIView(APIView):
             status=status.HTTP_204_NO_CONTENT,
         )
 
+
+class CartView(RetrieveModelMixin, GenericViewSet):
+    serializer_class = CartSerializer
+    
+    def get_object(self):
+        return Cart.objects.filter(owner=self.request.user)
+    
+
+class CartItemView(RetrieveUpdateDestroyAPIView):
+    serializer_class = CartItemSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        return Cartitem.objects.filter(cart__owner=user)
+    
+
+class OrderView(ListModelMixin,
+                CreateModelMixin,
+                RetrieveModelMixin,
+                GenericViewSet):
+    serializer_class = OrderSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        return Order.objects.filter(owner=user)
+    
+    def get_object(self):
+        return OrderItems.objects.filter(order=self.kwargs['pk']).all()
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = OrderItemSerializer(instance)
+        return Response(serializer.data)
+        return super().retrieve(request, *args, **kwargs)
+    
+    
+class VerifyOrder(APIView):
+    def post(self, request, format=None):
+        status_, data = incoming_request_checks(request)
+        if not status_:
+            return Response(
+                api_response(message=data, status=False),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        order_id = self.kwargs['order_id']
+        order = get_object_or_404(Order, id=order_id)
+        order.verified()
+        serializer = ProductSerializerIn(data=data)
+        serializer.is_valid() or raise_serializer_error_msg(errors=serializer.errors)
+        data = serializer.save()
+        return Response(
+            api_response(
+                message="Product created successfully", status=True, data=data
+            )
+        )
+
+
+    
+    
+    
