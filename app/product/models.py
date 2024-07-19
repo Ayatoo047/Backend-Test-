@@ -45,9 +45,9 @@ class Cart(models.Model):
     def __str__(self):
         return str(self.owner)
 
-class Cartitem(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='items')
+class Cartitems(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cartitems')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='items')
     quantity = models.IntegerField(default=1)
 
     def __str__(self):
@@ -57,7 +57,7 @@ class Cartitem(models.Model):
 class Order(models.Model):
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE) 
     is_verified = models.BooleanField(default=False)
-    order_id = models.CharField(max_length=13)
+    order_id = models.CharField(max_length=13, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     
     def __str__(self) -> str:
@@ -86,13 +86,13 @@ class Order(models.Model):
     
 
 class OrderItems(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
-    orderitems = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
-    quantity = models.PositiveSmallIntegerField()
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True, related_name='orderitems')
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    quantity = models.PositiveSmallIntegerField(default=1)
     
     @property
     def price(self):
-        final_price = self.quantity * self.orderitems.price
+        final_price = self.quantity * self.product.price
         return final_price
     
     def __str__(self) -> str:

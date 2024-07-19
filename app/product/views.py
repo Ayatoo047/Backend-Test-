@@ -8,9 +8,10 @@ from rest_framework.views import APIView
 from app.modules.exceptions import raise_serializer_error_msg
 from app.modules.utils import api_response, get_incoming_request_checks, incoming_request_checks
 from app.modules.permissions import IsAgentAdmin, IsAdmin
+from app.modules.paginations import TenInPagePagination
 from rest_framework.permissions import IsAuthenticated
 from .serializers import CartItemSerializer, CartSerializer, OrderItemSerializer, OrderSerializer, ProductSerializerIn, ProductSerializerOut
-from .models import Cart, Cartitem, Order, OrderItems, Product, Color 
+from .models import Cart, Cartitems, Order, OrderItems, Product, Color 
 from rest_framework.viewsets import ModelViewSet, GenericViewSet, ReadOnlyModelViewSet
 from rest_framework.mixins import RetrieveModelMixin, CreateModelMixin, ListModelMixin
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
@@ -30,7 +31,7 @@ class ProductAPIView(APIView):
             return []
         return super().get_permissions()
 
-    def update(self, request, pk, partial=None, format=None):
+    def update(self, request, pk, partial=False, format=None):
         status_, data = incoming_request_checks(request)
         if not status_:
             return Response(
@@ -39,7 +40,7 @@ class ProductAPIView(APIView):
             )
 
         instance = get_object_or_404(Product, pk=pk)
-        serializer = ProductSerializerIn(instance, data=data, partial=True)
+        serializer = ProductSerializerIn(instance, data=data, partial=partial)
         serializer.is_valid() or raise_serializer_error_msg(errors=serializer.errors)
         link = serializer.save()
         return Response(
@@ -107,7 +108,7 @@ class ProductAPIView(APIView):
             )
 
         instance = get_object_or_404(Product, pk=pk)
-        serializer = ProductSerializerIn(instance, data=data, partial=True)
+        serializer = ProductSerializerIn(instance, data=data, partial=False)
         serializer.is_valid() or raise_serializer_error_msg(errors=serializer.errors)
         link = serializer.save()
         return Response(
@@ -117,7 +118,7 @@ class ProductAPIView(APIView):
         )
 
     def patch(self, request, pk, format=None):
-        self.update()
+        self.update(partial=True)
     
     def delete(self, request, pk, format=None):
         instance = get_object_or_404(Product, pk=pk)
@@ -128,11 +129,11 @@ class ProductAPIView(APIView):
         )
 
 
-class CartView(RetrieveModelMixin, GenericViewSet):
+class CartView(RetrieveUpdateDestroyAPIView):
     serializer_class = CartSerializer
     
     def get_object(self):
-        return Cart.objects.filter(owner=self.request.user)
+        return Cart.objects.filter(owner=self.request.user).first()
     
 
 class CartItemView(RetrieveUpdateDestroyAPIView):
@@ -140,7 +141,7 @@ class CartItemView(RetrieveUpdateDestroyAPIView):
     
     def get_queryset(self):
         user = self.request.user
-        return Cartitem.objects.filter(cart__owner=user)
+        return Cartitems.objects.filter(cart__owner=user)
     
 
 class OrderView(ListModelMixin,
@@ -153,33 +154,14 @@ class OrderView(ListModelMixin,
         user = self.request.user
         return Order.objects.filter(owner=user)
     
-    def get_object(self):
-        return OrderItems.objects.filter(order=self.kwargs['pk']).all()
-    
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = OrderItemSerializer(instance)
-        return Response(serializer.data)
-        return super().retrieve(request, *args, **kwargs)
-    
     
 class VerifyOrder(APIView):
-    def post(self, request, format=None):
-        status_, data = incoming_request_checks(request)
-        if not status_:
-            return Response(
-                api_response(message=data, status=False),
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        order_id = self.kwargs['order_id']
-        order = get_object_or_404(Order, id=order_id)
-        order.verified()
-        serializer = ProductSerializerIn(data=data)
-        serializer.is_valid() or raise_serializer_error_msg(errors=serializer.errors)
-        data = serializer.save()
+    def get(self, request, pk, format=None):
+        order = get_object_or_404(Order, id=pk)
+        order = order.verified()
         return Response(
             api_response(
-                message="Product created successfully", status=True, data=data
+                message="Order verified successfully", status=True, order=order
             )
         )
 

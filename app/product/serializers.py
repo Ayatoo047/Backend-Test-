@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import (Cartitem, Color,
+from .models import (Cartitems, Color,
                      Order, OrderItems, 
                      Product, Category, Cart)
 
@@ -7,7 +7,7 @@ from .models import (Cartitem, Color,
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'title']
+        fields = ['id', 'name']
         
     def create(self, validated_data):
         category = super().create(validated_data)
@@ -23,7 +23,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductSerializerOut(serializers.ModelSerializer):
     colors = serializers.SerializerMethodField('get_colors')
-    category = serializers.CharField(source='category.title')
+    category = serializers.CharField(source='category.name')
     
     class Meta:
         model = Product
@@ -86,13 +86,13 @@ class ProductSerializerIn(serializers.ModelSerializer):
 
 class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Cartitem
-        fields = ['product', 'quantity']
+        model = Cartitems
+        fields = ['id','product', 'quantity']
         
     def create(self, validated_data):
         user = self.context['user_id']
         cart = Cart.objects.get_or_create(owner_id=user)
-        cartitem = Cartitem.objects.create(
+        cartitem = Cartitems.objects.create(
             cart=cart,
             **validated_data
         )
@@ -104,13 +104,14 @@ class CartSerializer(serializers.ModelSerializer):
     cartitems = CartItemSerializer(many=True)
     class Meta:
         model = Cart
-        fields = ['id', 'cartitems']
+        fields = ['id', 'owner', 'cartitems']
+    
         
 
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItems
-        fields = ['product', 'quantity',]
+        fields = ['product', 'quantity']
         
     def create(self, validated_data):
         user = self.context['user_id']
@@ -127,13 +128,13 @@ class OrderSerializer(serializers.ModelSerializer):
     orderitems = OrderItemSerializer(many=True)
     class Meta:
         model = Order
-        fields = ['order_id', 'order_items', 'is_verified']
+        fields = ['id','order_id', 'orderitems', 'is_verified']
         
         
     def create(self, validated_data):
         user_id = self.context['user_id']
         cart = Cart.objects.filter(owner_id=user_id).first()
-        cartitems = Cartitem.objects.filter(cart=cart).all()
+        cartitems = Cartitems.objects.filter(cart=cart).all()
         order = Order.objects.create(
             owner_id = user_id
         )
