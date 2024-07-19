@@ -73,7 +73,9 @@ class ProductAPIView(APIView):
                     queryset = self.get_queryset().filter(category__title=category)
             else:
                 queryset = self.get_queryset()
-            serializer = self.serializer_class(queryset, many=True)
+            paginator = TenInPagePagination()
+            paginated_queryset = paginator.paginate_queryset(queryset, request)
+            serializer = self.serializer_class(paginated_queryset, many=True)            
             message = "Products retrieved successfully" if len(serializer.data) > 0 else "No product available"
             return Response(
                 api_response(
