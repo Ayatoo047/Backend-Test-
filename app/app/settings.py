@@ -97,17 +97,17 @@ DATABASES = {
 }
 
 # Database
-DATABASES = {
-    "default": {
-        "ENGINE": env("DATABASE_ENGINE", None),
-        "OPTIONS": {"options": f"-c search_path={env('DATABASE_SCHEMA', None)}"},
-        "NAME": env("DATABASE_NAME", None),
-        "USER": env("DATABASE_USER", None),
-        "PASSWORD": env("DATABASE_PASSWORD", None),
-        "HOST": env("DATABASE_HOST", None),
-        "PORT": env("DATABASE_PORT", None),
-    }
-}
+# DATABASES = {
+#     "default": {
+#         "ENGINE": env("DATABASE_ENGINE", None),
+#         "OPTIONS": {"options": f"-c search_path={env('DATABASE_SCHEMA', None)}"},
+#         "NAME": env("DATABASE_NAME", None),
+#         "USER": env("DATABASE_USER", None),
+#         "PASSWORD": env("DATABASE_PASSWORD", None),
+#         "HOST": env("DATABASE_HOST", None),
+#         "PORT": env("DATABASE_PORT", None),
+#     }
+# }
 
 
 # Password validation

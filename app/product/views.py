@@ -239,8 +239,7 @@ class CartItemView(ModelViewSet):
                 status=status.HTTP_201_CREATED,
                 headers=headers
             )
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        
     
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

@@ -1,4 +1,7 @@
 from rest_framework import serializers
+
+from app.modules.exceptions import InvalidRequestException
+from app.modules.utils import api_response
 from .models import (Cartitems, Color,
                      Order, OrderItems, 
                      Product, Category, Cart)
@@ -147,7 +150,9 @@ class CreateOrderSerializer(serializers.Serializer):
     
     def create(self, validated_data):
         if validated_data["command"] != "checkout":
-            return
+            response = api_response(message="Invalid command", status=False)
+            raise InvalidRequestException(response)
+        
         user_id = self.context['user_id']
         cart = Cart.objects.filter(owner_id=user_id).first()
         cartitems = Cartitems.objects.filter(cart=cart).all()
