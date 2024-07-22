@@ -351,10 +351,12 @@ class OrderView(ListModelMixin,
     
     
 class VerifyOrder(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, pk, format=None):
         order = get_object_or_404(Order, id=pk)
         serializer = OrderSerializer(order)
-        order = order.verified()
+        order.verified()
+        print(serializer.data)
         return Response(
             api_response(
                 message="Order verified successfully", status=True, data=serializer.data

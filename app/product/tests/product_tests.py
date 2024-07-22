@@ -342,7 +342,7 @@ class TestCreateOrder():
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         
 
-    def test_200_if_okay(self, api_client, create_product):
+    def test_200_if_okay(self):
         client = APIClient()
         client.force_authenticate(user=User())
         header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
@@ -350,6 +350,15 @@ class TestCreateOrder():
         
         
         assert response.status_code == status.HTTP_200_OK
+
+    def test_400_if_bad_data(self):
+        client = APIClient()
+        client.force_authenticate(user=User())
+        header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
+        response = client.post('/store/order/', data={"requestType": "inbound", "data":{"command": "baddata"}}, format="json", **header)
+        
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 @pytest.mark.django_db
 class TestAddToCart():
@@ -391,7 +400,6 @@ class TestAddToCart():
         response = client.post('/store/cart/', data=data, format="json", **header)
         
         assert response.status_code == status.HTTP_201_CREATED
-
 
 @pytest.mark.django_db    
 class TestUpdateCartItem():
@@ -442,3 +450,24 @@ class TestUpdateCartItem():
         response = update_cartitem('patch', cartitems=None, another_user={})
         
         assert response.status_code == status.HTTP_403_FORBIDDEN
+        
+
+
+@pytest.mark.django_db
+class TestVerifyOrder():
+
+    def test_403_if_user_is_anonymous(self):
+        client = APIClient()
+        order = baker.make(Order)
+        response = client.get(f'/store/verify-order/{order.id}/')
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        
+
+    def test_200_if_okay(self,):
+        client = APIClient()
+        order = baker.make(Order)
+        client.force_authenticate(user=User())
+        response = client.get(f'/store/verify-order/{order.id}/')
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['data']['is_verified'] == True
