@@ -9,7 +9,7 @@ from model_bakery import baker
 def create_product(api_client):
     def do_create_product(product):
         header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
-        response = api_client.post('/product/products/', product, format="json", **header)
+        response = api_client.post('/store/products/', product, format="json", **header)
         return response
     return do_create_product
 
@@ -21,7 +21,7 @@ def put_product(api_client : APIClient):
         made_product = baker.make(Product, category=category, in_stock=10)
         id = made_product.__dict__.get('id')
         header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
-        response = api_client.put(f'/product/products/{id}/', product, format="json", **header)
+        response = api_client.put(f'/store/products/{id}/', product, format="json", **header)
         return response
     return do_put_product
 
@@ -32,7 +32,7 @@ def patch_product(api_client : APIClient):
         made_product = baker.make(Product, category=category, in_stock=10)
         id = made_product.__dict__.get('id')
         header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
-        response = api_client.put(f'/product/products/{id}/', product, format="json", **header)
+        response = api_client.put(f'/store/products/{id}/', product, format="json", **header)
         return response
     return do_patch_product
 
@@ -40,7 +40,7 @@ def patch_product(api_client : APIClient):
 def get_cart(api_client: APIClient):
     def do_get_cart():
         header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
-        response = api_client.get('/product/cart/', format="json", **header)
+        response = api_client.get('/store/cart/', format="json", **header)
         return response
     return do_get_cart    
 
@@ -48,7 +48,7 @@ def get_cart(api_client: APIClient):
 def get_order(api_client: APIClient):
     def do_get_order():
         header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
-        response = api_client.get('/product/order', format="json", **header)
+        response = api_client.get('/store/order', format="json", **header)
         return response
     return do_get_order    
 
@@ -79,9 +79,9 @@ def update_cartitem(api_client: APIClient):
             cartitems = cartitems
         
         if request == 'patch':
-            response = api_client.put(f'/product/cart/{cart_id}/', cartitems, format="json", **header)
+            response = api_client.put(f'/store/cart/{cart_id}/', cartitems, format="json", **header)
         elif request == 'put':
-            response = api_client.patch(f'/product/cart/{cart_id}/', cartitems, format="json", **header)
+            response = api_client.patch(f'/store/cart/{cart_id}/', cartitems, format="json", **header)
 
         return response
     return do_update_cartitem    
@@ -154,7 +154,7 @@ class TestCreateProduct():
 class TestGetProduct():
     def test_200_if_okay(self):
         client = APIClient()
-        response = client.get('/product/products/')
+        response = client.get('/store/products/')
         
         assert response.status_code == status.HTTP_200_OK
         
@@ -163,7 +163,7 @@ class TestGetProduct():
         category = (baker.make(Category))
         product = baker.make(Product, category=category, in_stock=10)
         id = product.__dict__.get('id')
-        response = client.get(f'/product/products/{id}/')
+        response = client.get(f'/store/products/{id}/')
         
         assert response.status_code == status.HTTP_200_OK
         assert response.data['data']['in_stock'] == 10
@@ -298,14 +298,14 @@ class TestGetOrder():
         user = baker.make(User)
         order = baker.make(Order, owner=user)
         client.force_authenticate(user=user)
-        response = client.get('/product/order/')
+        response = client.get('/store/order/')
 
         assert response.status_code == status.HTTP_200_OK
         
     def test_401_if_anonymous(self):
         client = APIClient()
         client.force_authenticate(user={})
-        response = client.get('/product/order/')
+        response = client.get('/store/order/')
         
         assert response.status_code == status.HTTP_403_FORBIDDEN
         
@@ -316,7 +316,7 @@ class TestGetOrder():
         client.force_authenticate(user=user)
         
         order_id = order.__dict__.get('id')
-        response = client.get(f'/product/order/{order_id}/')
+        response = client.get(f'/store/order/{order_id}/')
         
         assert response.status_code == status.HTTP_200_OK
 
@@ -327,7 +327,7 @@ class TestGetOrder():
         client.force_authenticate(user={})
         
         order_id = order.__dict__.get('id')
-        response = client.get(f'/product/order/{order_id}/')
+        response = client.get(f'/store/order/{order_id}/')
         
         
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -338,7 +338,7 @@ class TestCreateOrder():
     def test_403_if_user_is_anonymous(self):
         client = APIClient()
         header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
-        response = client.post('/product/order/', **header)
+        response = client.post('/store/order/', **header)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         
 
@@ -346,7 +346,7 @@ class TestCreateOrder():
         client = APIClient()
         client.force_authenticate(user=User())
         header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
-        response = client.post('/product/order/', data={"requestType": "inbound", "data":{"user_id": 1}}, format="json", **header)
+        response = client.post('/store/order/', data={"requestType": "inbound", "data":{"command": "checkout"}}, format="json", **header)
         
         
         assert response.status_code == status.HTTP_200_OK
@@ -368,7 +368,7 @@ class TestAddToCart():
                     }
                 }
         header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
-        response = client.post('/product/cart/', data=data, format="json", **header)
+        response = client.post('/store/cart/', data=data, format="json", **header)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         
 
@@ -388,7 +388,7 @@ class TestAddToCart():
                 }
             }
         header = {'HTTP_X-Api-Key':'R7zoOlmyoHSWZH1NMU9RTzUv5nfSo944YGLHX6SXYlYxzll3rHISEAgbdj3aItmQdwf9Axo2d4BuLevRoKsJaISarl8dYPoA18eojUzgBlobCo3oHu2WkGEFVC2f1uAp'}
-        response = client.post('/product/cart/', data=data, format="json", **header)
+        response = client.post('/store/cart/', data=data, format="json", **header)
         
         assert response.status_code == status.HTTP_201_CREATED
 

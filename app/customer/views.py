@@ -56,10 +56,15 @@ class CustomersView(CreateModelMixin, RetrieveModelMixin,
             )
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        user = self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        serializer = CreateUserSerializerOut(user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        user = serializer.save()
+        print(user)
+        return Response(
+                api_response(
+                    message="User retreived successfully",
+                    status=True,
+                    data=user,
+                ),
+             status=status.HTTP_201_CREATED)
     
     def update(self, request, *args, **kwargs):
         status_, data = incoming_request_checks(request)

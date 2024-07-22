@@ -326,15 +326,13 @@ class OrderView(ListModelMixin,
             )
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
+        order = serializer.save()
         return Response(
                 api_response(
                     message="Order retreived successfully",
                     status=True,
-                    data=serializer.data,
-                ),
-                headers=headers
+                    data=order,
+                )
             )
 
     def retrieve(self, request, *args, **kwargs):

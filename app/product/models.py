@@ -43,7 +43,19 @@ class Cart(models.Model):
     owner = models.OneToOneField(User, blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return str(self.owner)
+        return str(self.owner.username)
+    
+    @property
+    def grandtotal(self):
+        cartitems = self.cartitems.all()
+        grandtotal = sum([item.price for item in cartitems])
+        return grandtotal
+
+    @property
+    def numberofitem(self):
+        numberofitem = self.cartitems.count()
+        return numberofitem
+
 
 class Cartitems(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cartitems')
@@ -52,7 +64,12 @@ class Cartitems(models.Model):
 
     def __str__(self):
         return str(self.product)
-        
+    
+    @property
+    def price(self):
+        final_price = self.quantity * self.product.price
+        return final_price
+  
 
 class Order(models.Model):
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE) 

@@ -82,9 +82,13 @@ class ProductSerializerIn(serializers.ModelSerializer):
         ).data
 
 class CartItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    unit_price = serializers.CharField(source='product.price', read_only=True)
+    total_price = serializers.SerializerMethodField('get_price', read_only=True)
+
     class Meta:
         model = Cartitems
-        fields = ['id','product', 'quantity']
+        fields = ['id','product', 'product_name', 'unit_price','quantity', 'total_price']
         
     def create(self, validated_data):
         user_id = self.context['user_id']
@@ -103,21 +107,27 @@ class CartItemSerializer(serializers.ModelSerializer):
         return cartitem
         return super().create(validated_data)
     
-    
-    
+    def get_price(self, obj:Cartitems):
+        return obj.price
     
 class CartSerializer(serializers.ModelSerializer):
     cartitems = CartItemSerializer(many=True)
+    grandtotal = serializers.SerializerMethodField('get_grandtotal', read_only=True)
+    
     class Meta:
         model = Cart
-        fields = ['id', 'owner', 'cartitems']
+        fields = ['id', 'owner', 'cartitems', 'grandtotal']
     
-        
+    def get_grandtotal(self, obj:Cart):
+        return obj.grandtotal
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    unit_price = serializers.CharField(source='product.price', read_only=True)
+    total_price = serializers.SerializerMethodField('get_price', read_only=True)
     class Meta:
         model = OrderItems
-        fields = ['product', 'quantity']
+        fields = ['product', 'product_name', 'unit_price', 'total_price','quantity']
         
     def create(self, validated_data):
         user = self.context['user_id']
@@ -129,10 +139,15 @@ class OrderItemSerializer(serializers.ModelSerializer):
         return orderitems
         return super().create(validated_data)
     
+    def get_price(self, obj:OrderItems):
+        return obj.price
+    
 class CreateOrderSerializer(serializers.Serializer):
-    user_id = serializers.CharField(write_only=True)
+    command = serializers.CharField(write_only=True)
     
     def create(self, validated_data):
+        if validated_data["command"] != "checkout":
+            return
         user_id = self.context['user_id']
         cart = Cart.objects.filter(owner_id=user_id).first()
         cartitems = Cartitems.objects.filter(cart=cart).all()
@@ -145,14 +160,22 @@ class CreateOrderSerializer(serializers.Serializer):
                 product = item.product,
                 quantity = item.quantity
             )
-        return order
-    
+            item.delete()
+
+        return OrderSerializer(
+            order, context={"request": self.context.get("request")}
+        ).data
 
 class OrderSerializer(serializers.ModelSerializer):
     orderitems = OrderItemSerializer(many=True)
+    grandtotal = serializers.SerializerMethodField('get_grandtotal', read_only=True)
     class Meta:
         model = Order
-        fields = ['id','order_id', 'orderitems', 'is_verified']
+        fields = ['id', 'order_id', 'orderitems', 'grandtotal','is_verified']
+        
+    
+    def get_grandtotal(self, obj:Order):
+        return obj.grandtotal
         
         
         

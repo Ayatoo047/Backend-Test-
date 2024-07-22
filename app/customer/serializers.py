@@ -12,6 +12,13 @@ class CreateUserSerializer(ModelSerializer):
         model = User
         fields = ['username', 'email', 'password']
         
+    def create(self, validated_data):
+        user = super().create(validated_data)
+        print(user)
+        return CreateUserSerializerOut(
+            user, context={"request": self.context.get("request")}
+        ).data
+        
         
 class CreateUserSerializerOut(ModelSerializer):
     class Meta:
