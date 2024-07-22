@@ -1,5 +1,7 @@
 from rest_framework.serializers import ModelSerializer, Serializer
 from rest_framework import serializers
+from app.modules.utils import api_response
+from app.modules.exceptions import InvalidRequestException
 from customer.models import CustomerDetail
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -23,34 +25,54 @@ class LoginSerializerIn(Serializer):
     def create(self, validated_data):
         username = validated_data.get("username")
         password = validated_data.get("password")
+        
+        
+        user = User.objects.filter(username=username).first()
+        if user:
+            if user.is_authenticated:
+                return user
         user = authenticate(username=username, password=password)
+        print(user)
+        if not user:
+            response = api_response(message="Invalid email or password", status=False)
+            raise InvalidRequestException(response)
+        
 
-        # if not user:
-        #     raise InvalidRequestException(response)
 
         user_profile = CustomerDetail.objects.get_or_create(user=user)
 
         return user
 
-        
-    
 
 class UserDetailSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'username']
 
+
+
 class CustomerSerializer(ModelSerializer):
-    user = UserDetailSerializer
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
     class Meta:
         model = CustomerDetail
-        fields = ['user', 'address', 'phone', 'state', 'country']
+        fields = ['username', 'first_name', 'email','last_name', 'address', 'phone', 'state', 'country']
         
-    
-    def create(self, validated_data):
-        user_id = self.context['user_id']
-        user = User.objects.get(id=user_id)
-        return super().create(
-            user=user,
-            **validated_data
-            )
+    def update(self, instance : CustomerDetail, validated_data):
+        user : User = instance.user
+        
+        user_details : dict = validated_data.pop('user', None)
+        if user_details:
+            first_name = user_details.get('first_name', None)
+            last_name = user_details.get('last_name', None)
+            if first_name:
+                user.first_name = first_name
+            if last_name:
+                user.last_name = last_name
+        user.save()
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance

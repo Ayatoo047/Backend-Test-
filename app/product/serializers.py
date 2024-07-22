@@ -58,13 +58,11 @@ class ProductSerializerIn(serializers.ModelSerializer):
             product = Product.objects.create(**validated_data)
             
             for color in colors_to_add:
-                product.in_colors.add(color)
+                product.colors.add(color)
             product.save()
             success = True
         except Exception as e:
             success = False
-            # Handle or log the exception if necessary
-            print(f"Error creating event: {e}")
         return ProductSerializerOut(
             product, context={"request": self.context.get("request")}
         ).data
@@ -77,8 +75,7 @@ class ProductSerializerIn(serializers.ModelSerializer):
             for color in colors:
                 color, created = Color.objects.get_or_create(color= color.lower())
                 colors_to_add.append(color)
-        
-        updated.in_colors.set(colors_to_add)
+            updated.colors.set(colors_to_add)
         updated.save()
         return ProductSerializerOut(
             updated, context={"request": self.context.get("request")}
@@ -90,14 +87,23 @@ class CartItemSerializer(serializers.ModelSerializer):
         fields = ['id','product', 'quantity']
         
     def create(self, validated_data):
-        user = self.context['user_id']
-        cart = Cart.objects.get_or_create(owner_id=user)
+        user_id = self.context['user_id']
+        cart,_ = Cart.objects.get_or_create(owner_id=user_id)
+        product = validated_data.get('product', None)
+        quantity = validated_data.get('quantity', None)
+        cartitem = Cartitems.objects.filter(cart=cart, product=product).first()
+        if cartitem:
+            cartitem.quantity += quantity
+            cartitem.save()
+            return cartitem
         cartitem = Cartitems.objects.create(
             cart=cart,
             **validated_data
         )
         return cartitem
         return super().create(validated_data)
+    
+    
     
     
 class CartSerializer(serializers.ModelSerializer):
@@ -123,14 +129,9 @@ class OrderItemSerializer(serializers.ModelSerializer):
         return orderitems
         return super().create(validated_data)
     
+class CreateOrderSerializer(serializers.Serializer):
+    user_id = serializers.CharField(write_only=True)
     
-class OrderSerializer(serializers.ModelSerializer):
-    orderitems = OrderItemSerializer(many=True)
-    class Meta:
-        model = Order
-        fields = ['id','order_id', 'orderitems', 'is_verified']
-        
-        
     def create(self, validated_data):
         user_id = self.context['user_id']
         cart = Cart.objects.filter(owner_id=user_id).first()
@@ -144,5 +145,14 @@ class OrderSerializer(serializers.ModelSerializer):
                 product = item.product,
                 quantity = item.quantity
             )
-        return super().create(validated_data)
+        return order
+    
+
+class OrderSerializer(serializers.ModelSerializer):
+    orderitems = OrderItemSerializer(many=True)
+    class Meta:
+        model = Order
+        fields = ['id','order_id', 'orderitems', 'is_verified']
+        
+        
         

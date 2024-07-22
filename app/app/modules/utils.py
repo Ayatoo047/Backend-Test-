@@ -79,7 +79,7 @@ def get_incoming_request_checks(request) -> tuple:
             return False, "Invalid value for Request-Header field 'X-Api-Key'"
 
         return True, ""
-        # how do I handle requestType and also client ID e.g 'inbound', do I need to expect it as a query parameter.
+
     except (Exception,) as err:
         return False, f"{err}"
 
