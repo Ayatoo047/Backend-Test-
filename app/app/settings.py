@@ -153,7 +153,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-api-key",
 ]
-# AUTH_USER_MODEL = 'core.User'
+
+
 X_API_KEY = env("X_API_KEY", None)
 
 REST_FRAMEWORK = {

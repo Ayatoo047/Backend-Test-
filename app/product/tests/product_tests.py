@@ -87,8 +87,6 @@ def update_cartitem(api_client: APIClient):
     return do_update_cartitem    
 
 
-
-
 @pytest.mark.django_db
 class TestCreateProduct(): 
         
