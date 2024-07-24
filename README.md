@@ -2,6 +2,8 @@
 
 ## Project features
 
+ExtraSecurity measures
+
 1. Creation of user
 2. User login
 3. Creation of Products by admin
@@ -14,6 +16,7 @@
 
 
 
+
 ## POSTMAN DOCUMENTATION
 
 The postman documentation is available as [here][postman link]
@@ -23,6 +26,12 @@ The postman documentation is available as [here][postman link]
 
 **pytest*
 
+**Run the application**
+navigate into the /Backend-Test- directory
+
+pip install -r requirements.txt
+
+./app/manage.py runserver
 
 
 ## Resources for task
